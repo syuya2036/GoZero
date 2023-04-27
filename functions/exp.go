@@ -5,16 +5,12 @@ import (
 	"math"
 )
 
-type Exp struct {
-	FunctionBase
-}
-
-func NewExp() *Exp {
-	var e *Exp = &Exp{}
+func NewExp() *FunctionBase {
+	var e *FunctionBase = &FunctionBase{Name: "Square", Forward: forward, Backward: backward}
 	return e
 }
 
-func (e *Exp) Forward(mat *matrix.Matrix) *matrix.Matrix {
+func Forward(mat matrix.Matrix) matrix.Matrix {
 	result := make([]float64, mat.Rows*mat.Cols)
 	for i := range result {
 		result[i] = math.Exp(mat.Mat[i])
@@ -23,6 +19,6 @@ func (e *Exp) Forward(mat *matrix.Matrix) *matrix.Matrix {
 	return matrix.NewMatrix(result, mat.Rows, mat.Cols)
 }
 
-func (e *Exp) Backward(mat *matrix.Matrix) *matrix.Matrix {
-	return nil
+func Backward(mat *matrix.Matrix) matrix.Matrix {
+	return matrix.NewMatrix(make([]float64, 0), 0, 0)
 }

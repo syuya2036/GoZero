@@ -7,20 +7,21 @@ import (
 
 type Matrix struct {
 	Mat  []float64
+	Grad []float64
 	Rows int
 	Cols int
 }
 
-func NewMatrix(mat []float64, rows, cols int) *Matrix {
+func NewMatrix(mat []float64, rows, cols int) Matrix {
 	var self *Matrix = new(Matrix)
 
 	self.Mat = mat
 	self.Rows, self.Cols = rows, cols
 
-	return self
+	return *self
 }
 
-func NewScaler(value float64) *Matrix {
+func NewScaler(value float64) Matrix {
 	var self *Matrix = new(Matrix)
 
 	scalerMat := make([]float64, 1)
@@ -29,11 +30,11 @@ func NewScaler(value float64) *Matrix {
 
 	self.Rows, self.Cols = 1, 1
 
-	return self
+	return *self
 }
 
 // 二次元配列から初期化
-func NewMatrixFromArray(mat [][]float64) *Matrix {
+func NewMatrixFromArray(mat [][]float64) Matrix {
 
 	rows, cols := len(mat), len(mat[0])
 
@@ -48,9 +49,9 @@ func NewMatrixFromArray(mat [][]float64) *Matrix {
 }
 
 // 要素がすべて0の配列
-func Zeros(rows, cols int) (*Matrix, error) {
+func Zeros(rows, cols int) (Matrix, error) {
 	if rows < 1 || cols < 1 {
-		return nil, fmt.Errorf("invalid matrix shape: %d x %d", rows, cols)
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d", rows, cols)
 	}
 
 	mat := make([]float64, rows*cols)
@@ -62,9 +63,9 @@ func Zeros(rows, cols int) (*Matrix, error) {
 }
 
 // 行列積を計算
-func Dot(matA, matB *Matrix) (*Matrix, error) {
+func Dot(matA, matB Matrix) (Matrix, error) {
 	if matA.Cols != matB.Rows {
-		return nil, fmt.Errorf("invalid matrix shape: %d x %d and %d x %d", matA.Rows, matA.Cols, matB.Rows, matB.Cols)
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d and %d x %d", matA.Rows, matA.Cols, matB.Rows, matB.Cols)
 	}
 
 	result := make([]float64, matA.Rows*matB.Cols)
@@ -72,7 +73,7 @@ func Dot(matA, matB *Matrix) (*Matrix, error) {
 	for i := 0; i < matA.Rows; i++ {
 		for j := 0; j < matB.Cols; j++ {
 
-			// matAのi行k列とmatBのk列j行の積の和
+			// matAのi行k列とmatBのk行j列の積の和
 			var sum float64
 			for k := 0; k < matA.Cols; k++ {
 				sum += matA.Mat[i*matA.Cols+k] * matB.Mat[k*matB.Cols+j]
@@ -86,9 +87,9 @@ func Dot(matA, matB *Matrix) (*Matrix, error) {
 }
 
 // 配列の要素同士の足し算
-func Add(matA, matB *Matrix) (*Matrix, error) {
+func Add(matA, matB Matrix) (Matrix, error) {
 	if matA.Rows != matB.Rows || matA.Cols != matB.Cols {
-		return nil, fmt.Errorf("matrices must have same dimensions")
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("matrices must have same dimensions")
 	}
 
 	result := make([]float64, matA.Rows*matA.Cols)
@@ -100,9 +101,9 @@ func Add(matA, matB *Matrix) (*Matrix, error) {
 }
 
 // 配列の要素同士の引き算
-func Sub(matA, matB *Matrix) (*Matrix, error) {
+func Sub(matA, matB Matrix) (Matrix, error) {
 	if matA.Rows != matB.Rows || matA.Cols != matB.Cols {
-		return nil, fmt.Errorf("matrices must have same dimensions")
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("matrices must have same dimensions")
 	}
 
 	result := make([]float64, matA.Rows*matA.Cols)
@@ -114,9 +115,9 @@ func Sub(matA, matB *Matrix) (*Matrix, error) {
 }
 
 // 配列の要素同士の掛ぎ算
-func Mul(matA, matB *Matrix) (*Matrix, error) {
+func Mul(matA, matB Matrix) (Matrix, error) {
 	if matA.Rows != matB.Rows || matA.Cols != matB.Cols {
-		return nil, fmt.Errorf("matrices must have same dimensions")
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("matrices must have same dimensions")
 	}
 	
 	result := make([]float64, matA.Rows*matA.Cols)
@@ -128,15 +129,15 @@ func Mul(matA, matB *Matrix) (*Matrix, error) {
 }
 
 // 配列の要素同士の割り算
-func Div(matA, matB *Matrix) (*Matrix, error) {
+func Div(matA, matB Matrix) (Matrix, error) {
 	if matA.Rows != matB.Rows || matA.Cols != matB.Cols {
-		return nil, fmt.Errorf("matrices must have same dimensions")
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("matrices must have same dimensions")
 	}
 
 	result := make([]float64, matA.Rows*matA.Cols)
 	for i := range result {
 		if abs(matB.Mat[i]) < 1e-14 {
-			return nil, fmt.Errorf("division by zero")
+			return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("division by zero")
 		} else {
 			result[i] = matA.Mat[i] / matB.Mat[i]
 		}
@@ -146,7 +147,10 @@ func Div(matA, matB *Matrix) (*Matrix, error) {
 }
 
 // 配列の全要素にscalerを足す
-func (mat *Matrix) AddScaler(scaler float64) (*Matrix, error) {
+func (mat Matrix) AddScaler(scaler float64) (Matrix, error) {
+	if mat.Rows == 0 {
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d", mat.Rows, mat.Cols)
+	}
 	result := make([]float64, mat.Rows*mat.Cols)
 
 	for i := range result {
@@ -157,7 +161,10 @@ func (mat *Matrix) AddScaler(scaler float64) (*Matrix, error) {
 }
 
 // 配列の全要素からscalerを引く
-func (mat *Matrix) SubScaler(scaler float64) (*Matrix, error) {
+func (mat Matrix) SubScaler(scaler float64) (Matrix, error) {
+	if mat.Rows == 0 {
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d", mat.Rows, mat.Cols)
+	}
 	result := make([]float64, mat.Rows*mat.Cols)
 
 	for i := range result {
@@ -168,7 +175,10 @@ func (mat *Matrix) SubScaler(scaler float64) (*Matrix, error) {
 }
 
 // 配列の全要素にscalerを掛ける
-func (mat *Matrix) MulScaler(scaler float64) (*Matrix, error) {
+func (mat Matrix) MulScaler(scaler float64) (Matrix, error) {
+	if mat.Rows == 0 {
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d", mat.Rows, mat.Cols)
+	}
 	result := make([]float64, mat.Rows*mat.Cols)
 
 	for i := range result {
@@ -179,12 +189,15 @@ func (mat *Matrix) MulScaler(scaler float64) (*Matrix, error) {
 }
 
 // 配列の全要素をscalerで割る
-func (mat *Matrix) DivScaler(scaler float64) (*Matrix, error) {
+func (mat Matrix) DivScaler(scaler float64) (Matrix, error) {
+	if mat.Rows == 0 {
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d", mat.Rows, mat.Cols)
+	}
 	result := make([]float64, mat.Rows*mat.Cols)
 
 	for i := range result {
 		if abs(scaler) < 1e-14 {
-			return nil, fmt.Errorf("division by zero")
+			return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("division by zero")
 		} else {
 			result[i] = mat.Mat[i] / scaler
 		}
@@ -194,7 +207,10 @@ func (mat *Matrix) DivScaler(scaler float64) (*Matrix, error) {
 }
 
 // 配列の全要素をscaler乗する
-func (mat *Matrix) Pow(x float64) (*Matrix, error) {
+func (mat Matrix) Pow(x float64) (Matrix, error) {
+	if mat.Rows == 0 {
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d", mat.Rows, mat.Cols)
+	}
 	result := make([]float64, mat.Rows*mat.Cols)
 
 	for i := range result {
@@ -205,7 +221,10 @@ func (mat *Matrix) Pow(x float64) (*Matrix, error) {
 }
 
 // 行列を転置する
-func (mat *Matrix) T() (*Matrix, error) {
+func (mat Matrix) T() (Matrix, error) {
+	if mat.Rows == 0 {
+		return NewMatrix(make([]float64, 0), 0, 0), fmt.Errorf("invalid matrix shape: %d x %d", mat.Rows, mat.Cols)
+	}
 	result := make([]float64, mat.Cols*mat.Rows)
 
 	for i := 0; i < mat.Rows; i++ {
@@ -226,13 +245,27 @@ func abs(n float64) float64 {
 	}
 }
 
-func (mat *Matrix) PrintArray() (error) {
-	if mat == nil {
+func (mat Matrix) PrintArray() (error) {
+	if mat.Rows == 0 {
 		return fmt.Errorf("matrix is nil")
 	}
 	for i := 0; i < mat.Rows; i++ {
 		for j := 0; j < mat.Cols; j++ {
 			fmt.Printf("%f, ", mat.Mat[i*mat.Cols+j])
+		}
+		fmt.Print("\n")
+	}
+
+	return nil
+}
+
+func (mat Matrix) PrintGrad() (error) {
+	if mat.Rows == 0 {
+		return fmt.Errorf("matrix is nil")
+	}
+	for i := 0; i < mat.Rows; i++ {
+		for j := 0; j < mat.Cols; j++ {
+			fmt.Printf("%f, ", mat.Grad[i*mat.Cols+j])
 		}
 		fmt.Print("\n")
 	}

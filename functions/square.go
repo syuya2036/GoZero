@@ -5,24 +5,20 @@ import (
 	"math"
 )
 
-type Square struct {
-	FunctionBase
-}
-
-func NewSquare() Square {
-	var s Square = Square{}
+func NewSquare() *FunctionBase {
+	var s *FunctionBase = &FunctionBase{Name: "Square", Forward: forward, Backward: backward}
 	return	s
 }
 
-func (s Square) Forward(mat *matrix.Matrix) *matrix.Matrix {
+func forward(mat matrix.Matrix) matrix.Matrix {
 	result := make([]float64, mat.Rows*mat.Cols)
-	for i := range result {
+	for i := range result  {
 		result[i] = math.Pow(mat.Mat[i], 2)
 	}
 
 	return matrix.NewMatrix(result, mat.Rows, mat.Cols)
 }
 
-func (s Square) Backward(mat *matrix.Matrix) *matrix.Matrix {
-	return  nil
+func backward(mat matrix.Matrix) matrix.Matrix {
+	return  matrix.NewMatrix(make([]float64, 0), 0, 0)
 }

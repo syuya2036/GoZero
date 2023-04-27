@@ -7,13 +7,16 @@ import (
 
 type FunctionBase struct{
     Name string
-    Forward func(mat *matrix.Matrix) *matrix.Matrix
-    Backward func(mat *matrix.Matrix) *matrix.Matrix
+    Forward func(mat matrix.Matrix) matrix.Matrix
+    Backward func(mat matrix.Matrix) matrix.Matrix
+    input matrix.Matrix
 }
 
-func (f *FunctionBase) Fn(mat *matrix.Matrix) (*matrix.Matrix, error) {
+func (f *FunctionBase) Fn(mat matrix.Matrix) matrix.Matrix {
     result := f.Forward(mat)
-    return result, nil
+    f.input = mat
+
+    return result
 }
 
 func (f *FunctionBase) ToString() string {

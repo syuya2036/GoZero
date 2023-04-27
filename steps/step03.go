@@ -17,9 +17,9 @@ func main() {
 		{1, 2},
 		{3, 4}})
 
-	a := A.Forward(x)
-	b := B.Forward(a)
-	y := C.Forward(b)
+	a := A.Fn(x)
+	b := B.Fn(a)
+	y := C.Fn(b)
 	
 	err := y.PrintArray()
 	if err != nil {
