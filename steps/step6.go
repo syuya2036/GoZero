@@ -1,16 +1,13 @@
-package main
+package steps
 
 import (
+	// "fmt"
 	"fmt"
 	"log"
 
 	F "github.com/syuya2036/GoZero/functions"
 	"github.com/syuya2036/GoZero/model"
 )
-
-func main() {
-	step06()
-}
 
 func step06() {
 	// forward
@@ -29,8 +26,10 @@ func step06() {
 		log.Fatal(err)
 	}
 
+	// backward
 	y.Grad = []float64{1}
-	y.Backward()
+	b.Grad = C.BackFn(y.Grad)
+	a.Grad = B.BackFn(b.Grad)
+	x.Grad = A.BackFn(a.Grad)
 	fmt.Println(x.Grad)
 }
-

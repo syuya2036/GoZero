@@ -1,24 +1,28 @@
 package functions
 
 import (
-	"github.com/syuya2036/GoZero/matrix"
+	"github.com/syuya2036/GoZero/model"
 	"math"
 )
 
-func NewExp() *FunctionBase {
-	var e *FunctionBase = &FunctionBase{Name: "Square", Forward: forward, Backward: backward}
+func NewExp() *model.FunctionBase {
+	var e *model.FunctionBase = &model.FunctionBase{Name: "Exp", Forward: ExpForward, Backward: ExpBackward}
 	return e
 }
 
-func Forward(mat matrix.Matrix) matrix.Matrix {
+func ExpForward(mat *model.Matrix) *model.Matrix {
 	result := make([]float64, mat.Rows*mat.Cols)
 	for i := range result {
 		result[i] = math.Exp(mat.Mat[i])
 	}
 
-	return matrix.NewMatrix(result, mat.Rows, mat.Cols)
+	return model.NewMatrix(result, mat.Rows, mat.Cols)
 }
 
-func Backward(mat *matrix.Matrix) matrix.Matrix {
-	return matrix.NewMatrix(make([]float64, 0), 0, 0)
+func ExpBackward(mat *model.Matrix, gy []float64) []float64 {
+	result := make([]float64, mat.Rows*mat.Cols)
+	for i := range result {
+		result[i] = gy[i] * math.Exp(mat.Mat[i])
+	}
+	return result
 }
